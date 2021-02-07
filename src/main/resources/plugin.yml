@@ -1,7 +1,7 @@
-name: BlueMap-Essentials
+name: BlueMap-Essentials-WarpsOnly
 version: ${project.version}
 main: org.popcraft.bluemapessentials.BlueMapEssentials
 api-version: 1.16
 depend: [BlueMap, Essentials]
-authors: [pop4959]
-description: BlueMap integration for Essentials.
+authors: [pop4959, rmellis]
+description: BlueMap integration for Essentials Warps.
