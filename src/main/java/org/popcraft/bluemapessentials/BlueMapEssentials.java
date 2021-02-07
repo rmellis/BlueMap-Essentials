@@ -87,9 +87,6 @@ public final class BlueMapEssentials extends JavaPlugin implements BlueMapAPILis
             if (warpsEnabled) {
                 addWarpMarkers(markerAPI);
             }
-            if (homesEnabled) {
-                addHomeMarkers(markerAPI);
-            }
             markerAPI.save();
         } catch (IOException ignored) {
         }
