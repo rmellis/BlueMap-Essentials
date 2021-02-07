@@ -28,12 +28,12 @@ import java.util.Set;
 public final class BlueMapEssentials extends JavaPlugin implements BlueMapAPIListener {
     private IEssentials essentials;
     private BlueMapAPI blueMap;
-    private Set<Marker> warpMarkers, homeMarkers;
-    private String homeImageURL, warpImageURL;
+    private Set<Marker> warpMarkers;
+    private String warpImageURL;
     private long updateInterval;
-    private boolean warpsEnabled, homesEnabled;
-    private String warpLabelFormat, homeLabelFormat;
-    private final String MARKERSET_LABEL_HOMES = "homes", MARKERSET_LABEL_WARPS = "warps";
+    private boolean warpsEnabled;
+    private String warpLabelFormat;
+    private final String MARKERSET_LABEL_WARPS = "warps";
 
     @Override
     public void onEnable() {
@@ -42,12 +42,9 @@ public final class BlueMapEssentials extends JavaPlugin implements BlueMapAPILis
         this.saveConfig();
         this.essentials = (IEssentials) getServer().getPluginManager().getPlugin("Essentials");
         this.warpMarkers = new HashSet<>();
-        this.homeMarkers = new HashSet<>();
         this.updateInterval = Math.max(1, getConfig().getLong("update-interval", 300));
         this.warpsEnabled = getConfig().getBoolean("warps.enabled", true);
-        this.homesEnabled = getConfig().getBoolean("homes.enabled", true);
         this.warpLabelFormat = getConfig().getString("warps.label", "%warp%");
-        this.homeLabelFormat = getConfig().getString("homes.label", "%home% (%player%'s home)");
         BlueMapAPI.registerListener(this);
         new Metrics(this, 9011);
     }
@@ -73,12 +70,6 @@ public final class BlueMapEssentials extends JavaPlugin implements BlueMapAPILis
     }
 
     private void loadImages() {
-        try (InputStream homeImage = getResource("home.png")) {
-            if (homeImage != null) {
-                this.homeImageURL = blueMap.createImage(ImageIO.read(homeImage), "essentials/home");
-            }
-        } catch (IOException ignored) {
-        }
         try (InputStream warpImage = getResource("warp.png")) {
             if (warpImage != null) {
                 this.warpImageURL = blueMap.createImage(ImageIO.read(warpImage), "essentials/warp");
@@ -132,37 +123,6 @@ public final class BlueMapEssentials extends JavaPlugin implements BlueMapAPILis
         }
     }
 
-    private void addHomeMarkers(MarkerAPI markerAPI) {
-        UserMap userMap = essentials.getUserMap();
-        for (Player player : getServer().getOnlinePlayers()) {
-            final MarkerSet markerSetHomes = markerAPI.createMarkerSet(MARKERSET_LABEL_HOMES);
-            final User user = userMap.getUser(player.getUniqueId());
-            for (final String home : user.getHomes()) {
-                final Location homeLocation;
-                try {
-                    homeLocation = user.getHome(home);
-                } catch (Exception e) {
-                    continue;
-                }
-                World homeWorld = homeLocation.getWorld();
-                if (homeWorld == null) {
-                    continue;
-                }
-                blueMap.getWorld(homeWorld.getUID()).ifPresent(blueWorld -> blueWorld.getMaps().forEach(map -> {
-                    String homeMarkerId = String.format("home:%s:%s", user.getName(), home);
-                    Vector3d homeMarkerPos = Vector3d.from(homeLocation.getX(), homeLocation.getY(), homeLocation.getZ());
-                    POIMarker homeMarker = markerSetHomes.createPOIMarker(homeMarkerId, map, homeMarkerPos);
-                    homeMarker.setLabel(homeLabelFormat.replace("%home%", home).replace("%player%", user.getName()));
-                    Vector2i iconAnchor = homeMarker.getIconAnchor();
-                    if (homeImageURL != null) {
-                        homeMarker.setIcon(homeImageURL, iconAnchor);
-                    }
-                    homeMarkers.add(homeMarker);
-                }));
-            }
-        }
-    }
-
     private void removeMarkers() {
         if (essentials == null) {
             return;
@@ -173,11 +133,6 @@ public final class BlueMapEssentials extends JavaPlugin implements BlueMapAPILis
                 final MarkerSet markerSetWarps = markerAPI.createMarkerSet(MARKERSET_LABEL_WARPS);
                 warpMarkers.forEach(markerSetWarps::removeMarker);
                 warpMarkers.clear();
-            }
-            if (homesEnabled) {
-                final MarkerSet markerSetHomes = markerAPI.createMarkerSet(MARKERSET_LABEL_HOMES);
-                homeMarkers.forEach(markerSetHomes::removeMarker);
-                homeMarkers.clear();
             }
             markerAPI.save();
         } catch (IOException ignored) {
