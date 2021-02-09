@@ -11,3 +11,5 @@ This fork has been stripped of all the home functions and had its warp portal im
 
 
 <img alt="YAP" src="https://i.imgur.com/iXgkZNB.png">
+
+Download Here: https://github.com/rmellis/BlueMap-Essentials-WarpsOnly/releases
